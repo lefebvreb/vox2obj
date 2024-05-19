@@ -1,0 +1,12 @@
+[package]
+name = "vox2obj"
+version = "0.1.0"
+authors = ["Benjamin Lefebvre"]
+edition = "2021"
+description = "Convert MagicaVoxel's .vox files to optimized mesh .obj files."
+
+[dependencies]
+block-mesh = "0.2.0"
+clap = { version = "4.5.4", features = ["derive"] }
+dot_vox = "5.1.1"
+thiserror = "1.0.59"
