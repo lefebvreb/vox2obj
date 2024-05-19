@@ -1,7 +1,6 @@
 mod convert;
 mod error;
 mod obj;
-mod math;
 
 use std::fs;
 use std::path::PathBuf;
@@ -15,7 +14,12 @@ use crate::error::{Error, Result};
 pub struct Args {
     #[arg(help = "Path to the input .vox file")]
     input: PathBuf,
-    #[arg(short, long, default_value = "out.obj", help = "Path to the output .obj file name")]
+    #[arg(
+        short,
+        long,
+        default_value = "out.obj",
+        help = "Path to the output .obj file name"
+    )]
     output: PathBuf,
 }
 
@@ -26,8 +30,8 @@ fn main() -> Result<()> {
     let vox = dot_vox::load_bytes(input.as_ref()).map_err(Error::DotVox)?;
 
     let obj = match vox.models.as_slice() {
-        &[] => return Err(Error::EmptyVox),
-        &[ref model] => convert::convert_model(model),
+        [] => return Err(Error::EmptyVox),
+        [ref model] => convert::convert_model(model),
         _ => return Err(Error::TooManyModels),
     };
 

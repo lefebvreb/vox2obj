@@ -1,15 +1,14 @@
 // Ideally, one would use spade (a rust crate) to perform Constrained Delaunay Triangulation
 // to get an optimal meshing of the visible faces.
 
-use std::collections::HashMap;
-
-use block_mesh::ilattice::glam::{IVec3, Vec2};
+use block_mesh::ilattice::glam::IVec3;
 use block_mesh::ndshape::{RuntimeShape, Shape};
-use block_mesh::{GreedyQuadsBuffer, MergeVoxel, Voxel as BlockyVoxel, VoxelVisibility, RIGHT_HANDED_Y_UP_CONFIG};
+use block_mesh::{
+    GreedyQuadsBuffer, MergeVoxel, Voxel as BlockyVoxel, VoxelVisibility, RIGHT_HANDED_Y_UP_CONFIG,
+};
 use dot_vox::Model;
 
-use crate::math::Vec3;
-use crate::obj::Obj;
+use crate::obj::{Face, Obj};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 struct Voxel {
@@ -44,7 +43,7 @@ struct CubeRepr {
 }
 
 impl CubeRepr {
-    fn new(shape: &RuntimeShape::<u32, 3>, vox: &Model) -> Self {
+    fn new(shape: &RuntimeShape<u32, 3>, vox: &Model) -> Self {
         let mut voxels = vec![Voxel::EMPTY; shape.usize()].into_boxed_slice();
 
         for v in &vox.voxels {
@@ -83,14 +82,22 @@ pub fn convert_model(vox: &Model) -> Obj {
         .zip(RIGHT_HANDED_Y_UP_CONFIG.faces.as_ref())
     {
         for quad in group.iter() {
-            let i = cube.voxels[shape.linearize(quad.minimum) as usize].index;
-
-            let v = face.quad_mesh_positions(quad, 1.0)
+            let [a, b, c, d] = face
+                .quad_mesh_positions(quad, 1.0)
                 .map(|v| IVec3::from(v.map(|x| x.round() as i32 - 1)));
-            let vt = Vec2::new(f32::from(i) / 256.0 + 0.5, 0.5);
-            let vn = face.signed_normal();
+            let palette_index = cube.voxels[shape.linearize(quad.minimum) as usize].index;
+            let normal = face.signed_normal();
 
-            println!("v = {v:?}, vt = {vt:?}, vn = {vn:?}");
+            obj.push_face(Face {
+                vertices: [a, b, c],
+                palette_index,
+                normal,
+            });
+            obj.push_face(Face {
+                vertices: [b, c, d],
+                palette_index,
+                normal,
+            });
         }
     }
 

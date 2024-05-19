@@ -1,53 +1,100 @@
+use std::collections::HashMap;
 use std::fmt;
 
-use crate::math::{Face, FaceVertex, Vec3};
+use block_mesh::ilattice::glam::{IVec3, Vec2};
+
+#[derive(Debug)]
+pub struct Face {
+    pub vertices: [IVec3; 3],
+    pub palette_index: u8,
+    pub normal: IVec3,
+}
+
+#[derive(Debug)]
+struct FaceIndices {
+    v: [usize; 3],
+    vt: usize,
+    vn: usize,
+}
 
 #[derive(Default, Debug)]
 pub struct Obj {
-    /// Texture coordinates.
-    pub vt: Vec<[f64; 2]>,
-    /// Vertices.
-    pub v: Vec<Vec3>,
-    /// Faces.
-    pub f: Vec<Face>,
+    // Vertices.
+    v: Vec<IVec3>,
+    v_map: HashMap<IVec3, usize>,
+    // Texture coordinates.
+    vt: Vec<Vec2>,
+    vt_map: HashMap<u8, usize>,
+    // Normals.
+    vn: Vec<IVec3>,
+    vn_map: HashMap<IVec3, usize>,
+    // Faces.
+    f: Vec<FaceIndices>,
 }
 
 impl Obj {
-    pub fn push_vt(&mut self, i: u8) -> usize {
-        todo!()
+    fn v_idx(&mut self, v: IVec3) -> usize {
+        *self.v_map.entry(v).or_insert_with(|| {
+            self.v.push(v);
+            self.v.len()
+        })
     }
 
-    pub fn push_v(&mut self, v: Vec3) -> usize {
-        todo!()
+    fn vt_idx(&mut self, i: u8) -> usize {
+        *self.vt_map.entry(i).or_insert_with(|| {
+            self.vt
+                .push(Vec2::new((i % 16) as f32 + 0.5, (i / 16) as f32 + 0.5));
+            self.vt.len()
+        })
     }
 
-    pub fn push_face(&mut self, f: Face) -> usize {
-        todo!()
+    fn vn_idx(&mut self, vn: IVec3) -> usize {
+        *self.vn_map.entry(vn).or_insert_with(|| {
+            self.vn.push(vn);
+            self.vn.len()
+        })
+    }
+
+    pub fn push_face(&mut self, face: Face) {
+        let v = face.vertices.map(|vertex| self.v_idx(vertex));
+        let vt = self.vt_idx(face.palette_index);
+        let vn = self.vn_idx(face.normal);
+        self.f.push(FaceIndices { v, vt, vn });
     }
 }
 
 impl fmt::Display for Obj {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // Write normals.
-        writeln!(fmt, "vn -1 0 0\nvn 1 0 0\nvn 0 0 1\nvn 0 0 -1\nvn 0 -1 0\nvn 0 1 0")?;
-
-        // Write texture coordinates.
-        for [x, y] in &self.vt {
-            writeln!(fmt, "vt {x:.6} {y:.6}")?;
-        }
-
         // Write vertices.
-        for Vec3 { x, y, z } in &self.v {
+        for v in &self.v {
+            let [x, y, z] = v.to_array();
             writeln!(fmt, "v {x} {y} {z}")?;
         }
 
-        // Write vertices.
-        for [
-            FaceVertex { v: v1, vt: vt1, vn: vn1 },
-            FaceVertex { v: v2, vt: vt2, vn: vn2 },
-            FaceVertex { v: v3, vt: vt3, vn: vn3 },
-        ] in &self.f {
-            writeln!(fmt, "f {v1}/{vt1}/{vn1} {v2}/{vt2}/{vn2} {v3}/{vt3}/{vn3}")?;
+        // Write texture coordinates.
+        for vt in &self.vt {
+            let [x, y] = vt.to_array();
+            writeln!(fmt, "vt {x:.6} {y:.6}")?;
+        }
+
+        // Write normals.
+        for vn in &self.vn {
+            let [x, y, z] = vn.to_array();
+            writeln!(fmt, "vn {x} {y} {z}")?;
+        }
+
+        for FaceIndices {
+            v: [v1, v2, v3],
+            vt,
+            vn,
+        } in &self.f
+        {
+            writeln!(
+                fmt,
+                "f {v1}/{VT}/{VN} {v2}/{VT}/{VN} {v3}/{VT}/{VN}",
+                VT = vt,
+                VN = vn
+            )?;
         }
 
         Ok(())
