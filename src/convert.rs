@@ -1,12 +1,15 @@
 // Ideally, one would use spade (a rust crate) to perform Constrained Delaunay Triangulation
 // to get an optimal meshing of the visible faces.
 
+use std::collections::HashMap;
+
+use block_mesh::ilattice::glam::{IVec3, Vec2};
 use block_mesh::ndshape::{RuntimeShape, Shape};
 use block_mesh::{GreedyQuadsBuffer, MergeVoxel, Voxel as BlockyVoxel, VoxelVisibility, RIGHT_HANDED_Y_UP_CONFIG};
 use dot_vox::Model;
 
+use crate::math::Vec3;
 use crate::obj::Obj;
-use crate::error::Result;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 struct Voxel {
@@ -56,7 +59,7 @@ impl CubeRepr {
     }
 }
 
-pub fn convert_model(vox: &Model) -> Result<Obj> {
+pub fn convert_model(vox: &Model) -> Obj {
     let shape = RuntimeShape::<u32, 3>::new([vox.size.x, vox.size.y, vox.size.z].map(|a| a + 2));
     let cube = CubeRepr::new(&shape, vox);
 
@@ -71,14 +74,25 @@ pub fn convert_model(vox: &Model) -> Result<Obj> {
         &mut quads_buffer,
     );
 
+    let mut obj = Obj::default();
+
     for (group, face) in quads_buffer
         .quads
         .groups
         .iter()
         .zip(RIGHT_HANDED_Y_UP_CONFIG.faces.as_ref())
     {
-        println!("{group:?}");
+        for quad in group.iter() {
+            let i = cube.voxels[shape.linearize(quad.minimum) as usize].index;
+
+            let v = face.quad_mesh_positions(quad, 1.0)
+                .map(|v| IVec3::from(v.map(|x| x.round() as i32 - 1)));
+            let vt = Vec2::new(f32::from(i) / 256.0 + 0.5, 0.5);
+            let vn = face.signed_normal();
+
+            println!("v = {v:?}, vt = {vt:?}, vn = {vn:?}");
+        }
     }
 
-    todo!()
+    obj
 }
