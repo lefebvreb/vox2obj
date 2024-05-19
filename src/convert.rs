@@ -45,7 +45,7 @@ impl CubeRepr {
         let mut voxels = vec![Voxel::EMPTY; shape.usize()].into_boxed_slice();
 
         for v in &vox.voxels {
-            let pos = [v.x as u32, v.y as u32, v.z as u32];
+            let pos = [v.x, v.y, v.z].map(|a| a as u32 + 1);
             voxels[shape.linearize(pos) as usize] = Voxel {
                 index: v.i.wrapping_add(1),
                 visibility: VoxelVisibility::Opaque,
@@ -57,7 +57,7 @@ impl CubeRepr {
 }
 
 pub fn convert_model(vox: &Model) -> Result<Obj> {
-    let shape = RuntimeShape::<u32, 3>::new([vox.size.x, vox.size.y, vox.size.z]);
+    let shape = RuntimeShape::<u32, 3>::new([vox.size.x, vox.size.y, vox.size.z].map(|a| a + 2));
     let cube = CubeRepr::new(&shape, vox);
 
     let mut quads_buffer = GreedyQuadsBuffer::new(shape.usize());
