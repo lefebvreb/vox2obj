@@ -107,15 +107,10 @@ pub fn convert_model(vox: &Model) -> Obj {
 }
 
 pub fn convert_palette(colors: &[Color], materials: &[Material]) -> Palette {
-    fn xy(i: u32) -> (u32, u32) {
-        (i % 16, i / 16)
-    }
-
     let mut palette = Palette::default();
 
     for (i, color) in colors.iter().enumerate() {
-        let (x, y) = xy(i as u32);
-        palette.albedo.put_pixel(x, y, Rgba(color.into()));
+        palette.albedo.put_pixel(i as u32, 0, Rgba(color.into()));
     }
 
     palette

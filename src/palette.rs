@@ -28,7 +28,7 @@ impl Palette {
 impl Default for Palette {
     fn default() -> Self {
         Self { 
-            albedo: RgbaImage::new(16, 16),
+            albedo: RgbaImage::new(256, 1),
         }
     }
 }

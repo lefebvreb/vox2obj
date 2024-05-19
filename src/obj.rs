@@ -26,7 +26,7 @@ pub struct Obj {
     v: Vec<IVec3>,
     v_map: HashMap<IVec3, usize>,
     // Texture coordinates.
-    vt: Vec<Vec2>,
+    vt: Vec<f32>,
     vt_map: HashMap<u8, usize>,
     // Normals.
     vn: Vec<IVec3>,
@@ -45,7 +45,7 @@ impl Obj {
 
     fn vt_idx(&mut self, i: u8) -> usize {
         *self.vt_map.entry(i).or_insert_with(|| {
-            self.vt.push(Vec2::new((f32::from(i % 16) + 0.5) * 0.0625, 1.0 - (f32::from(i / 16) + 0.5) * 0.0625));
+            self.vt.push((f32::from(i) - 0.5) / 256.0);
             self.vt.len()
         })
     }
@@ -80,8 +80,7 @@ impl fmt::Display for Obj {
 
         // Write texture coordinates.
         for vt in &self.vt {
-            let [x, y] = vt.to_array();
-            writeln!(fmt, "vt {x:.6} {y:.6}")?;
+            writeln!(fmt, "vt {vt:.6} 0.5")?;
         }
 
         // Write normals.
