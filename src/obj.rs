@@ -7,15 +7,16 @@ use block_mesh::ilattice::glam::{IVec3, Vec2};
 use crate::error::Result;
 
 #[derive(Debug)]
-pub struct Face {
-    pub vertices: [IVec3; 3],
+pub struct Quad {
+    pub vertices: [IVec3; 4],
+    pub indices: [u32; 6],
     pub palette_index: u8,
     pub normal: IVec3,
 }
 
 #[derive(Debug)]
-struct FaceIndices {
-    v: [usize; 3],
+struct QuadIndices {
+    v: [usize; 6],
     vt: usize,
     vn: usize,
 }
@@ -31,8 +32,8 @@ pub struct Obj {
     // Normals.
     vn: Vec<IVec3>,
     vn_map: HashMap<IVec3, usize>,
-    // Faces.
-    f: Vec<FaceIndices>,
+    // Quads.
+    q: Vec<QuadIndices>,
 }
 
 impl Obj {
@@ -57,11 +58,11 @@ impl Obj {
         })
     }
 
-    pub fn push_face(&mut self, face: Face) {
-        let v = face.vertices.map(|vertex| self.v_idx(vertex));
-        let vt = self.vt_idx(face.palette_index);
-        let vn = self.vn_idx(face.normal);
-        self.f.push(FaceIndices { v, vt, vn });
+    pub fn push_quad(&mut self, quad: Quad) {
+        let v = quad.indices.map(|i| quad.vertices[i as usize]).map(|vertex| self.v_idx(vertex));
+        let vt = self.vt_idx(quad.palette_index);
+        let vn = self.vn_idx(quad.normal);
+        self.q.push(QuadIndices { v, vt, vn });
     }
 
     pub fn write<P: AsRef<Path>>(&self, path: P) -> Result<()> {
@@ -90,15 +91,15 @@ impl fmt::Display for Obj {
         }
 
         // Write faces.
-        for FaceIndices {
-            v: [v1, v2, v3],
+        for QuadIndices {
+            v: [v1, v2, v3, v4, v5, v6],
             vt,
             vn,
-        } in &self.f
+        } in &self.q
         {
             writeln!(
                 fmt,
-                "f {v1}/{VT}/{VN} {v2}/{VT}/{VN} {v3}/{VT}/{VN}",
+                "f {v1}/{VT}/{VN} {v2}/{VT}/{VN} {v3}/{VT}/{VN}\nf {v4}/{VT}/{VN} {v5}/{VT}/{VN} {v6}/{VT}/{VN}",
                 VT = vt,
                 VN = vn
             )?;

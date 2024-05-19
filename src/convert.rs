@@ -9,7 +9,7 @@ use block_mesh::{
 use dot_vox::{Color, Material, Model};
 use image::Rgba;
 
-use crate::obj::{Face, Obj};
+use crate::obj::{Quad, Obj};
 use crate::palette::Palette;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -84,19 +84,16 @@ pub fn convert_model(vox: &Model) -> Obj {
         .zip(RIGHT_HANDED_Y_UP_CONFIG.faces.as_ref())
     {
         for quad in group.iter() {
-            let [a, b, c, d] = face
+            let vertices = face
                 .quad_mesh_positions(quad, 1.0)
                 .map(|v| IVec3::from(v.map(|x| x.round() as i32 - 1)));
+            let indices = face.quad_mesh_indices(0);
             let palette_index = cube.voxels[shape.linearize(quad.minimum) as usize].index;
             let normal = face.signed_normal();
 
-            obj.push_face(Face {
-                vertices: [a, b, c],
-                palette_index,
-                normal,
-            });
-            obj.push_face(Face {
-                vertices: [b, d, c],
+            obj.push_quad(Quad {
+                vertices,
+                indices,
                 palette_index,
                 normal,
             });
