@@ -1,7 +1,10 @@
 use std::collections::HashMap;
-use std::fmt;
+use std::{fmt, fs};
+use std::path::Path;
 
 use block_mesh::ilattice::glam::{IVec3, Vec2};
+
+use crate::error::Result;
 
 #[derive(Debug)]
 pub struct Face {
@@ -42,8 +45,7 @@ impl Obj {
 
     fn vt_idx(&mut self, i: u8) -> usize {
         *self.vt_map.entry(i).or_insert_with(|| {
-            self.vt
-                .push(Vec2::new(f32::from(i % 16) + 0.5, f32::from(i / 16) + 0.5));
+            self.vt.push(Vec2::new((f32::from(i % 16) + 0.5) * 0.0625, 1.0 - (f32::from(i / 16) + 0.5) * 0.0625));
             self.vt.len()
         })
     }
@@ -60,6 +62,11 @@ impl Obj {
         let vt = self.vt_idx(face.palette_index);
         let vn = self.vn_idx(face.normal);
         self.f.push(FaceIndices { v, vt, vn });
+    }
+
+    pub fn write<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        fs::write(path.as_ref(), self.to_string())?;
+        Ok(())
     }
 }
 

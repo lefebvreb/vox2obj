@@ -1,6 +1,7 @@
 mod convert;
 mod error;
 mod obj;
+mod palette;
 
 use std::fs;
 use std::path::PathBuf;
@@ -21,6 +22,12 @@ pub struct Args {
         help = "Path to the output .obj file name"
     )]
     output: PathBuf,
+    #[arg(
+        short = 'p',
+        long = "write-palette-to", 
+        help = "Write palette to the given directory"
+    )]
+    palette: Option<PathBuf>,
 }
 
 fn main() -> Result<()> {
@@ -35,7 +42,12 @@ fn main() -> Result<()> {
         _ => return Err(Error::TooManyModels),
     };
 
-    fs::write(args.output, obj.to_string())?;
+    obj.write(args.output)?;
+
+    if let Some(path) = args.palette {
+        let palette = convert::convert_palette(&vox.palette, &vox.materials);
+        palette.write(path)?;
+    }
 
     Ok(())
 }

@@ -6,9 +6,11 @@ use block_mesh::ndshape::{RuntimeShape, Shape};
 use block_mesh::{
     GreedyQuadsBuffer, MergeVoxel, Voxel as VoxelTrait, VoxelVisibility, RIGHT_HANDED_Y_UP_CONFIG,
 };
-use dot_vox::Model;
+use dot_vox::{Color, Material, Model};
+use image::Rgba;
 
 use crate::obj::{Face, Obj};
+use crate::palette::Palette;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 struct Voxel {
@@ -102,4 +104,19 @@ pub fn convert_model(vox: &Model) -> Obj {
     }
 
     obj
+}
+
+pub fn convert_palette(colors: &[Color], materials: &[Material]) -> Palette {
+    fn xy(i: u32) -> (u32, u32) {
+        (i % 16, i / 16)
+    }
+
+    let mut palette = Palette::default();
+
+    for (i, color) in colors.iter().enumerate() {
+        let (x, y) = xy(i as u32);
+        palette.albedo.put_pixel(x, y, Rgba(color.into()));
+    }
+
+    palette
 }
