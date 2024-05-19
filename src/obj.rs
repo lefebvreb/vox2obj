@@ -43,7 +43,7 @@ impl Obj {
     fn vt_idx(&mut self, i: u8) -> usize {
         *self.vt_map.entry(i).or_insert_with(|| {
             self.vt
-                .push(Vec2::new((i % 16) as f32 + 0.5, (i / 16) as f32 + 0.5));
+                .push(Vec2::new(f32::from(i % 16) + 0.5, f32::from(i / 16) + 0.5));
             self.vt.len()
         })
     }
@@ -83,6 +83,7 @@ impl fmt::Display for Obj {
             writeln!(fmt, "vn {x} {y} {z}")?;
         }
 
+        // Write faces.
         for FaceIndices {
             v: [v1, v2, v3],
             vt,

@@ -4,7 +4,7 @@
 use block_mesh::ilattice::glam::IVec3;
 use block_mesh::ndshape::{RuntimeShape, Shape};
 use block_mesh::{
-    GreedyQuadsBuffer, MergeVoxel, Voxel as BlockyVoxel, VoxelVisibility, RIGHT_HANDED_Y_UP_CONFIG,
+    GreedyQuadsBuffer, MergeVoxel, Voxel as VoxelTrait, VoxelVisibility, RIGHT_HANDED_Y_UP_CONFIG,
 };
 use dot_vox::Model;
 
@@ -23,7 +23,7 @@ impl Voxel {
     };
 }
 
-impl BlockyVoxel for Voxel {
+impl VoxelTrait for Voxel {
     fn get_visibility(&self) -> VoxelVisibility {
         self.visibility
     }
@@ -47,7 +47,7 @@ impl CubeRepr {
         let mut voxels = vec![Voxel::EMPTY; shape.usize()].into_boxed_slice();
 
         for v in &vox.voxels {
-            let pos = [v.x, v.y, v.z].map(|a| a as u32 + 1);
+            let pos = [v.x, v.z, v.y].map(|a| u32::from(a) + 1);
             voxels[shape.linearize(pos) as usize] = Voxel {
                 index: v.i.wrapping_add(1),
                 visibility: VoxelVisibility::Opaque,
@@ -59,7 +59,7 @@ impl CubeRepr {
 }
 
 pub fn convert_model(vox: &Model) -> Obj {
-    let shape = RuntimeShape::<u32, 3>::new([vox.size.x, vox.size.y, vox.size.z].map(|a| a + 2));
+    let shape = RuntimeShape::<u32, 3>::new([vox.size.x, vox.size.z, vox.size.y].map(|a| a + 2));
     let cube = CubeRepr::new(&shape, vox);
 
     let mut quads_buffer = GreedyQuadsBuffer::new(shape.usize());
@@ -94,7 +94,7 @@ pub fn convert_model(vox: &Model) -> Obj {
                 normal,
             });
             obj.push_face(Face {
-                vertices: [b, c, d],
+                vertices: [b, d, c],
                 palette_index,
                 normal,
             });
