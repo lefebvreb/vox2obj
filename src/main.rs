@@ -1,4 +1,3 @@
-mod convert;
 mod error;
 mod obj;
 mod palette;
@@ -7,6 +6,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use clap::Parser;
+use obj::Obj;
 use palette::Palette;
 
 use crate::error::{Error, Result};
@@ -39,7 +39,7 @@ fn main() -> Result<()> {
 
     let obj = match vox.models.as_slice() {
         [] => return Err(Error::EmptyVox),
-        [ref model] => convert::convert_model(model),
+        [ref model] => Obj::new(model),
         _ => return Err(Error::TooManyModels),
     };
 
