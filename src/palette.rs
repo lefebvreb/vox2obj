@@ -1,7 +1,8 @@
 use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 
-use image::{ImageFormat, RgbaImage};
+use dot_vox::{Color, Material};
+use image::{ImageFormat, Rgba, RgbaImage};
 
 use crate::error::Result;
 
@@ -17,18 +18,22 @@ pub struct Palette {
 }
 
 impl Palette {
+    pub fn new(colors: &[Color], materials: &[Material]) -> Self {
+        let mut palette = Self {
+            albedo: RgbaImage::new(256, 1),
+        };
+
+        for (i, color) in colors.iter().enumerate() {
+            palette.albedo.put_pixel(i as u32, 0, Rgba(color.into()));
+        }
+
+        palette
+    }
+
     pub fn write<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         let path = path.as_ref();
         fs::create_dir_all(path)?;
         write_png_to(&self.albedo, path.join("albedo.png"))?;
         Ok(())
-    }
-}
-
-impl Default for Palette {
-    fn default() -> Self {
-        Self { 
-            albedo: RgbaImage::new(256, 1),
-        }
     }
 }

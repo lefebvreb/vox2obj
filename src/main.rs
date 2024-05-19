@@ -7,6 +7,7 @@ use std::fs;
 use std::path::PathBuf;
 
 use clap::Parser;
+use palette::Palette;
 
 use crate::error::{Error, Result};
 
@@ -24,7 +25,7 @@ pub struct Args {
     output: PathBuf,
     #[arg(
         short = 'p',
-        long = "write-palette-to", 
+        long = "write-palette-to",
         help = "Write palette to the given directory"
     )]
     palette: Option<PathBuf>,
@@ -45,7 +46,7 @@ fn main() -> Result<()> {
     obj.write(args.output)?;
 
     if let Some(path) = args.palette {
-        let palette = convert::convert_palette(&vox.palette, &vox.materials);
+        let palette = Palette::new(&vox.palette, &vox.materials);
         palette.write(path)?;
     }
 

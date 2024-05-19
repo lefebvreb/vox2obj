@@ -1,8 +1,8 @@
 use std::collections::HashMap;
-use std::{fmt, fs};
 use std::path::Path;
+use std::{fmt, fs};
 
-use block_mesh::ilattice::glam::{IVec3, Vec2};
+use block_mesh::ilattice::glam::IVec3;
 
 use crate::error::Result;
 
@@ -59,7 +59,10 @@ impl Obj {
     }
 
     pub fn push_quad(&mut self, quad: Quad) {
-        let v = quad.indices.map(|i| quad.vertices[i as usize]).map(|vertex| self.v_idx(vertex));
+        let v = quad
+            .indices
+            .map(|i| quad.vertices[i as usize])
+            .map(|vertex| self.v_idx(vertex));
         let vt = self.vt_idx(quad.palette_index);
         let vn = self.vn_idx(quad.normal);
         self.q.push(QuadIndices { v, vt, vn });
