@@ -1,16 +1,30 @@
 # Vox2Obj
 
-Convert MagicaVoxel's `.vox` files to optimized mesh `.obj` files, from the command line.
+Convert [MagicaVoxel](https://ephtracy.github.io/)'s `.vox` files to optimized mesh `.obj` files, from the command line.
 
-## Supported features
-
+**Supported features**:
 * Export scene trees to multiple `.obj` files, one per frame per model.
-* UV, albedo, metallic, roughness, emission.
+* Export palette textures: albedo, metalness, roughness, emission.
 
-## Unsupported features
-
+**Unsupported features**:
 * Transforms (translation + rotation).
-* Transparency
+* Transparency.
+
+Exported models have a scale of 1 block = 1 unit.
+
+## Installation and Usage
+
+Install [`cargo`](https://crates.io/), then type in your favorite shell:
+
+```sh
+cargo install --git https://github.com/lefebvreb/vox2obj
+```
+
+You can then execute `vox2obj` like so:
+
+```sh
+vox2obj --help
+```
 
 ## Future ideas
 
