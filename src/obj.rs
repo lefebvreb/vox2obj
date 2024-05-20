@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::{fmt, fs};
 
-use block_mesh::ilattice::glam::IVec3;
+use block_mesh::ilattice::glam::{IVec3, UVec2, Vec2, Vec3};
 use block_mesh::ndshape::{RuntimeShape, Shape};
 use block_mesh::{
     GreedyQuadsBuffer, MergeVoxel, Voxel as VoxelTrait, VoxelVisibility, RIGHT_HANDED_Y_UP_CONFIG,
@@ -74,10 +74,11 @@ impl CubeRepr {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct Obj {
+    offset: Vec2,
     // Vertices.
-    v: Vec<IVec3>,
+    v: Vec<Vec3>,
     v_map: HashMap<IVec3, usize>,
     // Texture coordinates.
     vt: Vec<f32>,
@@ -106,7 +107,16 @@ impl Obj {
             &mut quads_buffer,
         );
 
-        let mut obj = Obj::default();
+        let mut this = Obj {
+            offset: UVec2::new(vox.size.x, vox.size.y).as_vec2() * 0.5,
+            v: vec![],
+            v_map: HashMap::new(),
+            vt: vec![],
+            vt_map: HashMap::new(),
+            vn: vec![],
+            vn_map: HashMap::new(),
+            q: vec![],
+        };
 
         for (group, face) in quads_buffer
             .quads
@@ -122,7 +132,7 @@ impl Obj {
                 let palette_index = cube.voxels[shape.linearize(quad.minimum) as usize].index;
                 let normal = face.signed_normal();
 
-                obj.push_quad(Quad {
+                this.push_quad(Quad {
                     vertices,
                     indices,
                     palette_index,
@@ -131,11 +141,24 @@ impl Obj {
             }
         }
 
-        obj
+        this
+    }
+
+    pub fn push_quad(&mut self, quad: Quad) {
+        let v = quad
+            .indices
+            .map(|i| quad.vertices[i as usize])
+            .map(|vertex| self.v_idx(vertex));
+        let vt = self.vt_idx(quad.palette_index);
+        let vn = self.vn_idx(quad.normal);
+        self.q.push(QuadIndices { v, vt, vn });
     }
 
     fn v_idx(&mut self, v: IVec3) -> usize {
         *self.v_map.entry(v).or_insert_with(|| {
+            let mut v = v.as_vec3();
+            v.x -= self.offset.x;
+            v.z -= self.offset.y;
             self.v.push(v);
             self.v.len()
         })
@@ -155,16 +178,6 @@ impl Obj {
         })
     }
 
-    pub fn push_quad(&mut self, quad: Quad) {
-        let v = quad
-            .indices
-            .map(|i| quad.vertices[i as usize])
-            .map(|vertex| self.v_idx(vertex));
-        let vt = self.vt_idx(quad.palette_index);
-        let vn = self.vn_idx(quad.normal);
-        self.q.push(QuadIndices { v, vt, vn });
-    }
-
     pub fn write<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         fs::write(path.as_ref(), self.to_string())?;
         Ok(())
@@ -176,7 +189,7 @@ impl fmt::Display for Obj {
         // Write vertices.
         for v in &self.v {
             let [x, y, z] = v.to_array();
-            writeln!(fmt, "v {x} {y} {z}")?;
+            writeln!(fmt, "v {x:.1} {y:.1} {z:.1}")?;
         }
 
         // Write texture coordinates.
