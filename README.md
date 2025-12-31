@@ -1,3 +1,5 @@
+**Archived**: this repository now lives in [Codeberg](https://codeberg.org/blefebvre/vox2obj).
+
 # Vox2Obj
 
 Convert [MagicaVoxel](https://ephtracy.github.io/)'s `.vox` files to optimized mesh `.obj` files, from the command line.
